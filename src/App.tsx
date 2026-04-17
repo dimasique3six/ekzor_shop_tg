@@ -16,7 +16,7 @@ export default function App() {
   }, [])
 
   return (
-    <HashRouter>
+    <MemoryRouter>
       <Routes>
         <Route path="/"             element={<CatalogPage />} />
         <Route path="/cart"         element={<CartPage />} />
@@ -28,6 +28,6 @@ export default function App() {
         <Route path="/admin/products/new"       element={<AdminProductFormPage />} />
         <Route path="/admin/products/:id/edit"  element={<AdminProductFormPage />} />
       </Routes>
-    </HashRouter>
+    </MemoryRouter>
   )
 }
