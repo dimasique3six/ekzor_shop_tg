@@ -1,13 +1,22 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useCartStore } from '../store/cart'
+
+const ACCENT = '#e354ff'
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
   const { items, getTotal, clear } = useCartStore()
   const total = getTotal()
-  const [form, setForm] = useState({ name: '', phone: '', address: '', comment: '' })
+
+  // Проверяем, есть ли username в Telegram
+  const tgUsername = useMemo(() => {
+    return (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.username || ''
+  }, [])
+  const needsContact = !tgUsername
+
+  const [form, setForm] = useState({ name: '', phone: '', contact: '', address: '', comment: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [serverErr, setServerErr] = useState('')
@@ -24,6 +33,7 @@ export default function CheckoutPage() {
     if (!form.name.trim())    e.name    = 'Обязательное поле'
     if (!form.phone.trim())   e.phone   = 'Обязательное поле'
     if (!form.address.trim()) e.address = 'Обязательное поле'
+    if (needsContact && !form.contact.trim()) e.contact = 'Укажите Telegram или ссылку для связи'
     return e
   }
 
@@ -36,11 +46,12 @@ export default function CheckoutPage() {
       const order = await api.orders.create({
         items: items.map(i => ({ productId: i.product.id, quantity: i.quantity, variants: i.selectedVariants })),
         customerName: form.name, customerPhone: form.phone,
+        customerContact: needsContact ? form.contact : undefined,
         address: form.address, comment: form.comment || undefined
       }, ikey)
       clear(); navigate(`/success/${order.id}`)
     } catch (err: any) {
-      if (err.status === 409) setServerErr('Некоторые товары недоступны. Обновите корзину.')
+      if (err.status === 409) setServerErr(err.data?.error || 'Товар больше недоступен')
       else setServerErr(err.message || 'Произошла ошибка')
     } finally { setLoading(false) }
   }
@@ -70,23 +81,39 @@ export default function CheckoutPage() {
           <span className="text-base font-black text-white">{total.toLocaleString('ru-RU')} ₽</span>
         </div>
 
-        {[
-          { key: 'name', label: 'Имя', placeholder: 'Иван Иванов', type: 'text' },
-          { key: 'phone', label: 'Телефон', placeholder: '+7 999 000-00-00', type: 'tel' },
-        ].map(({ key, label, placeholder, type }) => (
-          <div key={key}>
-            <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">{label} *</label>
-            <input type={type} value={(form as any)[key]} placeholder={placeholder}
-              onChange={e => set(key, e.target.value)} style={fieldStyle} />
-            {errors[key] && <p className="text-xs mt-1" style={{ color: '#e354ff' }}>{errors[key]}</p>}
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Имя *</label>
+          <input type="text" value={form.name} placeholder="Иван Иванов"
+            onChange={e => set('name', e.target.value)} style={fieldStyle} />
+          {errors.name && <p className="text-xs mt-1" style={{ color: ACCENT }}>{errors.name}</p>}
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Телефон *</label>
+          <input type="tel" value={form.phone} placeholder="+7 999 000-00-00"
+            onChange={e => set('phone', e.target.value)} style={fieldStyle} />
+          {errors.phone && <p className="text-xs mt-1" style={{ color: ACCENT }}>{errors.phone}</p>}
+        </div>
+
+        {needsContact && (
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">
+              Telegram для связи *
+            </label>
+            <input type="text" value={form.contact} placeholder="@username или ссылка"
+              onChange={e => set('contact', e.target.value)} style={fieldStyle} />
+            <p className="text-xs mt-1 text-zinc-600">
+              У вашего аккаунта нет username — укажите контакт чтобы продавец мог связаться
+            </p>
+            {errors.contact && <p className="text-xs mt-1" style={{ color: ACCENT }}>{errors.contact}</p>}
           </div>
-        ))}
+        )}
 
         <div>
           <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Адрес доставки *</label>
           <textarea rows={3} value={form.address} placeholder="г. Москва, ул. Пушкина, д. 1, кв. 10"
             onChange={e => set('address', e.target.value)} style={{ ...fieldStyle, resize: 'none' }} />
-          {errors.address && <p className="text-xs mt-1" style={{ color: '#e354ff' }}>{errors.address}</p>}
+          {errors.address && <p className="text-xs mt-1" style={{ color: ACCENT }}>{errors.address}</p>}
         </div>
 
         <div>
@@ -96,7 +123,7 @@ export default function CheckoutPage() {
         </div>
 
         {serverErr && (
-          <p className="text-xs py-3 px-4 border" style={{ color: '#e354ff', borderColor: '#e354ff', background: 'rgba(227,84,255,0.05)' }}>
+          <p className="text-xs py-3 px-4 border" style={{ color: ACCENT, borderColor: ACCENT, background: 'rgba(227,84,255,0.05)' }}>
             {serverErr}
           </p>
         )}
@@ -106,7 +133,7 @@ export default function CheckoutPage() {
         style={{ background: '#0a0a0a' }}>
         <button onClick={handleSubmit} disabled={loading}
           className="w-full py-4 text-sm font-black uppercase tracking-widest disabled:opacity-40 transition-all hover:opacity-90"
-          style={{ background: '#e354ff', color: '#fff' }}>
+          style={{ background: ACCENT, color: '#fff' }}>
           {loading ? '...' : `Оформить — ${total.toLocaleString('ru-RU')} ₽`}
         </button>
       </div>
