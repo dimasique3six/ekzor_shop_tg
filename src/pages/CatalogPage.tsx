@@ -4,6 +4,16 @@ import { api } from '../api'
 import { useCartStore } from '../store/cart'
 import type { Product, ProductVariant } from '../types'
 
+const CATEGORIES = [
+  { id: '', label: 'Все' },
+  { id: 'кассеты', label: 'Кассеты' },
+  { id: 'винил', label: 'Винил' },
+  { id: 'футболки', label: 'Футболки' },
+  { id: 'худи', label: 'Худи' },
+  { id: 'аксессуары', label: 'Аксессуары' },
+  { id: 'другое', label: 'Другое' },
+]
+
 function ProductModal({ product, onClose }: { product: Product; onClose: () => void }) {
   const [imgIdx, setImgIdx] = useState(0)
   const [qty, setQty] = useState(1)
@@ -12,13 +22,11 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
     product.variants?.forEach(v => { if (v.values[0]) init[v.name] = v.values[0].label })
     return init
   })
-  const addItem = useCartStore(s => s.addItem)
 
   const basePrice = Number(product.price)
   const extraPrice = product.variants
     ? product.variants.reduce((sum, v) => {
-        const sel = variants[v.name]
-        const val = v.values.find(x => x.label === sel)
+        const val = v.values.find(x => x.label === variants[v.name])
         return sum + (val?.priceDiff ?? 0)
       }, 0)
     : 0
@@ -45,7 +53,7 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
                 {product.images.map((_, i) => (
                   <button key={i} onClick={() => setImgIdx(i)}
                     className="w-1.5 h-1.5 rounded-full transition-all"
-                    style={{ background: i === imgIdx ? '#d4a843' : 'rgba(255,255,255,0.3)' }} />
+                    style={{ background: i === imgIdx ? '#e354ff' : 'rgba(255,255,255,0.3)' }} />
                 ))}
               </div>
             )}
@@ -55,7 +63,7 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
         <div className="px-4 py-5 space-y-5">
           <div className="flex items-start justify-between gap-4">
             <h1 className="text-xl font-black uppercase tracking-wide text-white leading-tight">{product.name}</h1>
-            <span className="text-xl font-black whitespace-nowrap" style={{ color: '#d4a843' }}>
+            <span className="text-xl font-black whitespace-nowrap" style={{ color: '#e354ff' }}>
               {(basePrice + extraPrice).toLocaleString('ru-RU')} ₽
             </span>
           </div>
@@ -69,11 +77,14 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
               <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">{variant.name}</div>
               <div className="flex flex-wrap gap-2">
                 {variant.values.map(v => (
-                  <button key={v.label} onClick={() => setVariants(prev => ({ ...prev, [variant.name]: v.label }))}
+                  <button key={v.label}
+                    onClick={() => setVariants(prev => ({ ...prev, [variant.name]: v.label }))}
                     className="px-3 py-1.5 text-sm font-bold uppercase tracking-wide transition-all"
-                    style={variants[variant.name] === v.label
-                      ? { background: '#d4a843', color: '#0a0a0a', border: '1px solid #d4a843' }
-                      : { background: 'transparent', color: '#888', border: '1px solid #333' }}>
+                    style={{
+                      variants[variant.name] === v.label
+                        ? { background: '#e354ff', color: '#fff', border: `1px solid #e354ff` }
+                        : { background: 'transparent', color: '#888', border: '1px solid #333' }
+                    }}>
                     {v.label}{v.priceDiff !== 0 && ` +${v.priceDiff}₽`}
                   </button>
                 ))}
@@ -97,7 +108,7 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
       <div className="px-4 pb-8 pt-4 border-t border-zinc-800">
         <button onClick={() => { useCartStore.getState().addItem(product, qty, variants); onClose() }}
           className="w-full py-4 text-sm font-black uppercase tracking-widest transition-all hover:opacity-90"
-          style={{ background: '#d4a843', color: '#0a0a0a' }}>
+          style={{ background: '#e354ff', color: '#fff' }}>
           В корзину — {totalPrice.toLocaleString('ru-RU')} ₽
         </button>
       </div>
@@ -110,52 +121,75 @@ export default function CatalogPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Product | null>(null)
+  const [category, setCategory] = useState('')
   const cartCount = useCartStore(s => s.items.reduce((n, i) => n + i.quantity, 0))
 
   useEffect(() => {
     api.products.list().then(setProducts).finally(() => setLoading(false))
   }, [])
 
+  const filtered = category
+    ? products.filter(p => (p as any).category === category)
+    : products
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: '#0a0a0a' }}>
-        <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#d4a843', borderTopColor: 'transparent' }} />
+        <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
+          style={{ borderColor: '#e354ff', borderTopColor: 'transparent' }} />
       </div>
     )
   }
 
   return (
     <div className="min-h-screen" style={{ background: '#0a0a0a' }}>
-      <header className="sticky top-0 z-10 flex items-center justify-between px-4 py-4 border-b border-zinc-800"
-        style={{ background: '#0a0a0a' }}>
-        <h1 className="text-sm font-black uppercase tracking-[0.3em] text-white">Merch</h1>
-        <button onClick={() => navigate('/cart')} className="relative p-1">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
-            className="text-zinc-400 hover:text-white transition-colors">
-            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-            <line x1="3" y1="6" x2="21" y2="6"/>
-            <path d="M16 10a4 4 0 01-8 0"/>
-          </svg>
-          {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 text-xs font-black rounded-full w-4 h-4 flex items-center justify-center"
-              style={{ background: '#d4a843', color: '#0a0a0a', fontSize: 10 }}>{cartCount}</span>
-          )}
-        </button>
+      <header className="sticky top-0 z-10 border-b border-zinc-800" style={{ background: '#0a0a0a' }}>
+        <div className="flex items-center justify-between px-4 py-4">
+          <h1 className="text-sm font-black uppercase tracking-[0.3em] text-white">Catalogue</h1>
+          <button onClick={() => navigate('/cart')} className="relative p-1">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+              className="text-zinc-400 hover:text-white transition-colors">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 01-8 0"/>
+            </svg>
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 text-xs font-black rounded-full w-4 h-4 flex items-center justify-center"
+                style={{ background: '#e354ff', color: '#fff', fontSize: 10 }}>{cartCount}</span>
+            )}
+          </button>
+        </div>
+
+        {/* Фильтры по категориям */}
+        <div className="flex gap-2 px-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          {CATEGORIES.map(cat => (
+            <button key={cat.id} onClick={() => setCategory(cat.id)}
+              className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all"
+              style={{
+                category === cat.id
+                  ? { background: '#e354ff', color: '#fff', border: `1px solid #e354ff` }
+                  : { background: 'transparent', color: '#666', border: '1px solid #2a2a2a' }
+              }}>
+              {cat.label}
+            </button>
+          ))}
+        </div>
       </header>
 
-      {products.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center pt-32 gap-4">
-          <span className="text-5xl opacity-20">◻</span>
-          <p className="text-xs uppercase tracking-widest text-zinc-600">Товары пока не добавлены</p>
+          <span className="text-5xl opacity-10">◻</span>
+          <p className="text-xs uppercase tracking-widest text-zinc-600">
+            {category ? 'В этой категории пусто' : 'Товары пока не добавлены'}
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-px p-0" style={{ background: '#1a1a1a' }}>
-          {products.map(product => (
+        <div className="grid grid-cols-2 gap-px" style={{ background: '#1a1a1a' }}>
+          {filtered.map(product => (
             <button key={product.id}
               onClick={() => product.status === 'available' && setSelected(product)}
               className="relative flex flex-col text-left transition-opacity"
               style={{ background: '#0a0a0a', opacity: product.status === 'unavailable' ? 0.5 : 1 }}>
-              {/* Квадратная картинка фиксированного размера */}
               <div className="relative w-full bg-zinc-900" style={{ paddingTop: '100%' }}>
                 {product.images[0]
                   ? <img src={product.images[0]} alt={product.name}
@@ -173,7 +207,7 @@ export default function CatalogPage() {
               </div>
               <div className="px-3 py-3 flex flex-col gap-1" style={{ minHeight: 72 }}>
                 <p className="text-xs font-bold uppercase tracking-wide text-white leading-tight line-clamp-2">{product.name}</p>
-                <p className="text-xs font-black mt-auto" style={{ color: '#d4a843' }}>
+                <p className="text-xs font-black mt-auto" style={{ color: '#e354ff' }}>
                   {Number(product.price).toLocaleString('ru-RU')} ₽
                 </p>
               </div>
