@@ -1,4 +1,4 @@
-import { MemoryRouter, Routes, Route } from 'react-router-dom' 
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { useEffect } from 'react'
 import CatalogPage      from './pages/CatalogPage'
 import CartPage         from './pages/CartPage'
@@ -15,8 +15,12 @@ export default function App() {
     if (tg) { tg.ready(); tg.expand() }
   }, [])
 
+  // Если в URL есть ?admin=1 — показываем админку
+  const isAdmin = new URLSearchParams(window.location.search).get('admin') === '1'
+  const initial = isAdmin ? ['/admin'] : ['/']
+
   return (
-    <MemoryRouter>
+    <MemoryRouter initialEntries={initial}>
       <Routes>
         <Route path="/"             element={<CatalogPage />} />
         <Route path="/cart"         element={<CartPage />} />
