@@ -26,8 +26,8 @@ export default function SuccessPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center gap-6"
       style={{ background: '#0a0a0a' }}>
-      <div className="w-16 h-16 flex items-center justify-center border-2" style={{ borderColor: '#d4a843' }}>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d4a843" strokeWidth="2.5">
+      <div className="w-16 h-16 flex items-center justify-center border-2" style={{ borderColor: '#e354ff' }}>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e354ff" strokeWidth="2.5">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
       </div>
@@ -66,7 +66,7 @@ export default function SuccessPage() {
       {SELLER_USERNAME && (
         <button onClick={goToSeller}
           className="w-full py-4 text-sm font-black uppercase tracking-widest transition-all hover:opacity-90"
-          style={{ background: '#d4a843', color: '#0a0a0a' }}>
+          style={{ background: '#e354ff', color: '#fff' }}>
           Написать продавцу
         </button>
       )}
