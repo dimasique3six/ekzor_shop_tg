@@ -17,20 +17,18 @@ export default function AdminLoginPage() {
       navigate('/admin/orders')
     } catch {
       setError('Неверный пароль')
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4" style={{ color: '#111827' }}>
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm p-8">
-        <h1 className="text-2xl font-bold text-center mb-6">Панель управления</h1>
+        <h1 className="text-2xl font-bold text-center mb-6 text-gray-900">Панель управления</h1>
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Пароль</label>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-400"
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-400 bg-white text-gray-900"
               placeholder="Введите пароль" autoFocus />
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
