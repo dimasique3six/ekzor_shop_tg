@@ -24,48 +24,50 @@ export default function SuccessPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center gap-5"
-      style={{ background: 'var(--tg-theme-bg-color,#fff)' }}>
-      {/* Иконка */}
-      <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl"
-        style={{ background: 'var(--tg-theme-button-color,#2481cc)' }}>✓</div>
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center gap-6"
+      style={{ background: '#0a0a0a' }}>
+      <div className="w-16 h-16 flex items-center justify-center border-2" style={{ borderColor: '#d4a843' }}>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d4a843" strokeWidth="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
 
       <div>
-        <h1 className="text-xl font-bold mb-1">Заказ оформлен!</h1>
-        {id && <p className="text-sm" style={{ color: 'var(--tg-theme-hint-color,#888)' }}>#{id}</p>}
+        <h1 className="text-xl font-black uppercase tracking-widest text-white mb-1">Заказ принят</h1>
+        {id && <p className="text-xs text-zinc-600 uppercase tracking-wider font-mono">#{id}</p>}
       </div>
 
       {order && (
-        <div className="w-full rounded-2xl p-4 text-left space-y-2"
-          style={{ background: 'var(--tg-theme-secondary-bg-color,#f2f2f7)' }}>
+        <div className="w-full border border-zinc-800 p-4 text-left space-y-2">
           {order.items.map(item => (
-            <div key={item.id} className="flex justify-between text-sm">
-              <span className="flex-1 mr-2">
+            <div key={item.id} className="flex justify-between text-xs gap-3">
+              <span className="text-zinc-400 flex-1">
                 {item.product.name}
                 {item.variants && Object.values(item.variants).length > 0
-                  ? ` (${Object.values(item.variants).join(', ')})`
-                  : ''}
+                  ? ` / ${Object.values(item.variants).join(', ')}` : ''}
                 {' '}× {item.quantity}
               </span>
-              <span className="font-medium">{(Number(item.price) * item.quantity).toLocaleString('ru-RU')} ₽</span>
+              <span className="font-black text-white whitespace-nowrap">
+                {(Number(item.price) * item.quantity).toLocaleString('ru-RU')} ₽
+              </span>
             </div>
           ))}
-          <div className="border-t border-gray-300 pt-2 flex justify-between font-bold">
-            <span>Итого</span>
-            <span>{Number(order.totalAmount).toLocaleString('ru-RU')} ₽</span>
+          <div className="pt-2 border-t border-zinc-800 flex justify-between">
+            <span className="text-xs uppercase tracking-widest text-zinc-500">Итого</span>
+            <span className="font-black text-white">{Number(order.totalAmount).toLocaleString('ru-RU')} ₽</span>
           </div>
         </div>
       )}
 
-      <p className="text-sm" style={{ color: 'var(--tg-theme-hint-color,#888)' }}>
-        Для подтверждения и оплаты свяжитесь с продавцом
+      <p className="text-xs text-zinc-600 uppercase tracking-wider leading-relaxed">
+        Свяжитесь с продавцом для подтверждения и оплаты
       </p>
 
       {SELLER_USERNAME && (
         <button onClick={goToSeller}
-          className="w-full py-3.5 rounded-xl text-base font-semibold"
-          style={{ background: 'var(--tg-theme-button-color,#2481cc)', color: 'var(--tg-theme-button-text-color,#fff)' }}>
-          Перейти в чат с продавцом
+          className="w-full py-4 text-sm font-black uppercase tracking-widest transition-all hover:opacity-90"
+          style={{ background: '#d4a843', color: '#0a0a0a' }}>
+          Написать продавцу
         </button>
       )}
     </div>
