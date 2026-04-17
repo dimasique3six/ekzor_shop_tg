@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { adminApi } from '../../api'
 
 const API = import.meta.env.VITE_API_URL || ''
+const CATEGORIES = ['кассеты', 'винил', 'футболки', 'худи', 'аксессуары', 'другое']
 
 interface VariantValue { label: string; priceDiff: number }
 interface Variant { name: string; values: VariantValue[] }
@@ -17,6 +18,7 @@ export default function AdminProductFormPage() {
   const [name,     setName]     = useState('')
   const [price,    setPrice]    = useState('')
   const [stock,    setStock]    = useState('')
+  const [category, setCategory] = useState('')
   const [desc,     setDesc]     = useState('')
   const [images,   setImages]   = useState<string[]>([''])
   const [status,   setStatus]   = useState<'available' | 'unavailable'>('available')
@@ -31,6 +33,7 @@ export default function AdminProductFormPage() {
       if (!p) return
       setName(p.name); setPrice(String(Number(p.price)))
       setStock((p as any).stock != null ? String((p as any).stock) : '')
+      setCategory((p as any).category || '')
       setDesc(p.description || ''); setStatus(p.status)
       setImages(p.images.length > 0 ? p.images : [''])
       setVariants((p.variants as Variant[]) || [])
@@ -53,9 +56,7 @@ export default function AdminProductFormPage() {
       setImages(imgs => { const c = [...imgs]; c[idx] = data.url; return c })
     } catch (e: any) {
       setError('Ошибка загрузки: ' + e.message)
-    } finally {
-      setUploadingIdx(null)
-    }
+    } finally { setUploadingIdx(null) }
   }
 
   function addVariant() { setVariants(v => [...v, { name: '', values: [{ label: '', priceDiff: 0 }] }]) }
@@ -84,6 +85,7 @@ export default function AdminProductFormPage() {
     const payload = {
       name: name.trim(), price: Number(price),
       stock: stock !== '' ? Number(stock) : null,
+      category: category || null,
       description: desc.trim() || null,
       images: images.filter(Boolean), status,
       variants: variants.length > 0 ? variants : null
@@ -96,13 +98,13 @@ export default function AdminProductFormPage() {
     finally { setSaving(false) }
   }
 
-  const inp = "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400"
+  const inp = "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 bg-white text-gray-900"
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" style={{ color: '#111827' }}>
       <header className="bg-white border-b px-6 py-4 flex items-center gap-4">
         <button onClick={() => navigate('/admin/products')} className="text-gray-400 hover:text-gray-600 text-xl">←</button>
-        <h1 className="text-xl font-bold">{isEdit ? 'Редактировать товар' : 'Новый товар'}</h1>
+        <h1 className="text-xl font-bold text-gray-900">{isEdit ? 'Редактировать товар' : 'Новый товар'}</h1>
       </header>
 
       <div className="max-w-2xl mx-auto px-6 py-6 space-y-6">
@@ -112,16 +114,25 @@ export default function AdminProductFormPage() {
             <label className="block text-sm font-medium text-gray-600 mb-1">Название *</label>
             <input value={name} onChange={e => setName(e.target.value)} className={inp} placeholder="Название товара" />
           </div>
-          <div className="flex gap-4">
-            <div className="flex-1">
+          <div className="flex gap-4 flex-wrap">
+            <div className="flex-1 min-w-32">
               <label className="block text-sm font-medium text-gray-600 mb-1">Цена (₽) *</label>
               <input type="number" min="0" value={price} onChange={e => setPrice(e.target.value)} className={inp} placeholder="1500" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-32">
               <label className="block text-sm font-medium text-gray-600 mb-1">
-                Количество <span className="text-xs text-gray-400">(пусто = ∞)</span>
+                Кол-во <span className="text-xs text-gray-400">(пусто = ∞)</span>
               </label>
               <input type="number" min="0" value={stock} onChange={e => setStock(e.target.value)} className={inp} placeholder="50" />
+            </div>
+          </div>
+          <div className="flex gap-4 flex-wrap">
+            <div className="flex-1 min-w-40">
+              <label className="block text-sm font-medium text-gray-600 mb-1">Категория</label>
+              <select value={category} onChange={e => setCategory(e.target.value)} className={inp}>
+                <option value="">— Без категории —</option>
+                {CATEGORIES.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Статус</label>
@@ -138,26 +149,23 @@ export default function AdminProductFormPage() {
           </div>
         </div>
 
-        {/* Изображения */}
         <div className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
           <h2 className="font-semibold text-gray-700">Изображения (до 5 штук)</h2>
           {images.map((url, i) => (
             <div key={i} className="space-y-2">
               <div className="flex gap-2 items-center">
                 <input value={url} onChange={e => setImg(i, e.target.value)} className={`${inp} flex-1`}
-                  placeholder="URL картинки или загрузи файл →" />
+                  placeholder="URL или загрузи файл →" />
                 <button onClick={() => { (fileRef.current as any)._idx = i; fileRef.current?.click() }}
                   disabled={uploadingIdx !== null}
-                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium whitespace-nowrap disabled:opacity-50">
+                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium whitespace-nowrap disabled:opacity-50 text-gray-700">
                   {uploadingIdx === i ? '...' : '📁 Файл'}
                 </button>
                 {images.length > 1 && (
                   <button onClick={() => removeImg(i)} className="text-red-400 hover:text-red-600 px-1">✕</button>
                 )}
               </div>
-              {url && (
-                <img src={url} alt="" className="h-20 w-20 object-cover rounded-lg border border-gray-200" />
-              )}
+              {url && <img src={url} alt="" className="h-20 w-20 object-cover rounded-lg border border-gray-200" />}
             </div>
           ))}
           {images.length < 5 && (
@@ -172,18 +180,19 @@ export default function AdminProductFormPage() {
             }} />
         </div>
 
-        {/* Варианты */}
         <div className="bg-white rounded-xl p-6 space-y-4 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-gray-700">Варианты</h2>
-            <button onClick={addVariant} className="text-sm text-blue-500 hover:text-blue-700">+ Добавить вариант</button>
+            <div>
+              <h2 className="font-semibold text-gray-700">Варианты</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Например: Размер (S/M/L), Цвет. Наценка — доплата за вариант.</p>
+            </div>
+            <button onClick={addVariant} className="text-sm text-blue-500 hover:text-blue-700">+ Добавить</button>
           </div>
-          {variants.length === 0 && <p className="text-sm text-gray-400">Например: Размер, Цвет.</p>}
           {variants.map((v, vi) => (
             <div key={vi} className="border border-gray-200 rounded-lg p-4 space-y-3">
               <div className="flex gap-2 items-center">
                 <input value={v.name} onChange={e => setVarName(vi, e.target.value)}
-                  className={`${inp} flex-1`} placeholder="Название варианта (напр. Размер)" />
+                  className={`${inp} flex-1`} placeholder="Название (напр. Размер)" />
                 <button onClick={() => removeVariant(vi)} className="text-red-400 hover:text-red-600">✕</button>
               </div>
               <div className="space-y-2">
@@ -191,15 +200,16 @@ export default function AdminProductFormPage() {
                   <div key={ji} className="flex gap-2 items-center">
                     <input value={val.label} onChange={e => setVarValue(vi, ji, 'label', e.target.value)}
                       className={`${inp} flex-1`} placeholder="Значение (напр. M)" />
-                    <input type="number" value={val.priceDiff} onChange={e => setVarValue(vi, ji, 'priceDiff', e.target.value)}
-                      className={`${inp} w-28`} placeholder="Доплата ₽" />
+                    <input type="number" value={val.priceDiff}
+                      onChange={e => setVarValue(vi, ji, 'priceDiff', e.target.value)}
+                      className={`${inp} w-32`} placeholder="Наценка ₽" />
                     {v.values.length > 1 && (
                       <button onClick={() => removeVarValue(vi, ji)} className="text-gray-400 hover:text-red-500">✕</button>
                     )}
                   </div>
                 ))}
               </div>
-              <button onClick={() => addVarValue(vi)} className="text-xs text-blue-500 hover:text-blue-700">+ Добавить значение</button>
+              <button onClick={() => addVarValue(vi)} className="text-xs text-blue-500 hover:text-blue-700">+ Значение</button>
             </div>
           ))}
         </div>
