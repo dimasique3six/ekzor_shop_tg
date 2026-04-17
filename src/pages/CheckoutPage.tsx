@@ -7,7 +7,6 @@ export default function CheckoutPage() {
   const navigate = useNavigate()
   const { items, getTotal, clear } = useCartStore()
   const total = getTotal()
-
   const [form, setForm] = useState({ name: '', phone: '', address: '', comment: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
@@ -39,8 +38,7 @@ export default function CheckoutPage() {
         customerName: form.name, customerPhone: form.phone,
         address: form.address, comment: form.comment || undefined
       }, ikey)
-      clear()
-      navigate(`/success/${order.id}`)
+      clear(); navigate(`/success/${order.id}`)
     } catch (err: any) {
       if (err.status === 409) setServerErr('Некоторые товары недоступны. Обновите корзину.')
       else setServerErr(err.message || 'Произошла ошибка')
@@ -80,27 +78,25 @@ export default function CheckoutPage() {
             <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">{label} *</label>
             <input type={type} value={(form as any)[key]} placeholder={placeholder}
               onChange={e => set(key, e.target.value)} style={fieldStyle} />
-            {errors[key] && <p className="text-xs mt-1" style={{ color: '#d4a843' }}>{errors[key]}</p>}
+            {errors[key] && <p className="text-xs mt-1" style={{ color: '#e354ff' }}>{errors[key]}</p>}
           </div>
         ))}
 
         <div>
           <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Адрес доставки *</label>
           <textarea rows={3} value={form.address} placeholder="г. Москва, ул. Пушкина, д. 1, кв. 10"
-            onChange={e => set('address', e.target.value)}
-            style={{ ...fieldStyle, resize: 'none' }} />
-          {errors.address && <p className="text-xs mt-1" style={{ color: '#d4a843' }}>{errors.address}</p>}
+            onChange={e => set('address', e.target.value)} style={{ ...fieldStyle, resize: 'none' }} />
+          {errors.address && <p className="text-xs mt-1" style={{ color: '#e354ff' }}>{errors.address}</p>}
         </div>
 
         <div>
           <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Комментарий</label>
           <textarea rows={2} value={form.comment} placeholder="Необязательно"
-            onChange={e => set('comment', e.target.value)}
-            style={{ ...fieldStyle, resize: 'none' }} />
+            onChange={e => set('comment', e.target.value)} style={{ ...fieldStyle, resize: 'none' }} />
         </div>
 
         {serverErr && (
-          <p className="text-xs py-3 px-4 border" style={{ color: '#d4a843', borderColor: '#d4a843', background: 'rgba(212,168,67,0.05)' }}>
+          <p className="text-xs py-3 px-4 border" style={{ color: '#e354ff', borderColor: '#e354ff', background: 'rgba(227,84,255,0.05)' }}>
             {serverErr}
           </p>
         )}
@@ -110,7 +106,7 @@ export default function CheckoutPage() {
         style={{ background: '#0a0a0a' }}>
         <button onClick={handleSubmit} disabled={loading}
           className="w-full py-4 text-sm font-black uppercase tracking-widest disabled:opacity-40 transition-all hover:opacity-90"
-          style={{ background: '#d4a843', color: '#0a0a0a' }}>
+          style={{ background: '#e354ff', color: '#fff' }}>
           {loading ? '...' : `Оформить — ${total.toLocaleString('ru-RU')} ₽`}
         </button>
       </div>
