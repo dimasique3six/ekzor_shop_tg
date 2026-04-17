@@ -4,6 +4,8 @@ import { api } from '../api'
 import { useCartStore } from '../store/cart'
 import type { Product, ProductVariant } from '../types'
 
+const ACCENT = '#e354ff'
+
 const CATEGORIES = [
   { id: '', label: 'Все' },
   { id: 'кассеты', label: 'Кассеты' },
@@ -53,7 +55,7 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
                 {product.images.map((_, i) => (
                   <button key={i} onClick={() => setImgIdx(i)}
                     className="w-1.5 h-1.5 rounded-full transition-all"
-                    style={{ background: i === imgIdx ? '#e354ff' : 'rgba(255,255,255,0.3)' }} />
+                    style={{ background: i === imgIdx ? ACCENT : 'rgba(255,255,255,0.3)' }} />
                 ))}
               </div>
             )}
@@ -63,7 +65,7 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
         <div className="px-4 py-5 space-y-5">
           <div className="flex items-start justify-between gap-4">
             <h1 className="text-xl font-black uppercase tracking-wide text-white leading-tight">{product.name}</h1>
-            <span className="text-xl font-black whitespace-nowrap" style={{ color: '#e354ff' }}>
+            <span className="text-xl font-black whitespace-nowrap" style={{ color: ACCENT }}>
               {(basePrice + extraPrice).toLocaleString('ru-RU')} ₽
             </span>
           </div>
@@ -76,18 +78,19 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
             <div key={variant.name}>
               <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">{variant.name}</div>
               <div className="flex flex-wrap gap-2">
-                {variant.values.map(v => (
-                  <button key={v.label}
-                    onClick={() => setVariants(prev => ({ ...prev, [variant.name]: v.label }))}
-                    className="px-3 py-1.5 text-sm font-bold uppercase tracking-wide transition-all"
-                    style={{
-                      variants[variant.name] === v.label
-                        ? { background: '#e354ff', color: '#fff', border: `1px solid #e354ff` }
-                        : { background: 'transparent', color: '#888', border: '1px solid #333' }
-                    }}>
-                    {v.label}{v.priceDiff !== 0 && ` +${v.priceDiff}₽`}
-                  </button>
-                ))}
+                {variant.values.map(v => {
+                  const isActive = variants[variant.name] === v.label
+                  return (
+                    <button key={v.label}
+                      onClick={() => setVariants(prev => ({ ...prev, [variant.name]: v.label }))}
+                      className="px-3 py-1.5 text-sm font-bold uppercase tracking-wide transition-all"
+                      style={isActive
+                        ? { background: ACCENT, color: '#fff', border: `1px solid ${ACCENT}` }
+                        : { background: 'transparent', color: '#888', border: '1px solid #333' }}>
+                      {v.label}{v.priceDiff !== 0 && ` +${v.priceDiff}₽`}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           ))}
@@ -108,7 +111,7 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
       <div className="px-4 pb-8 pt-4 border-t border-zinc-800">
         <button onClick={() => { useCartStore.getState().addItem(product, qty, variants); onClose() }}
           className="w-full py-4 text-sm font-black uppercase tracking-widest transition-all hover:opacity-90"
-          style={{ background: '#e354ff', color: '#fff' }}>
+          style={{ background: ACCENT, color: '#fff' }}>
           В корзину — {totalPrice.toLocaleString('ru-RU')} ₽
         </button>
       </div>
@@ -136,7 +139,7 @@ export default function CatalogPage() {
     return (
       <div className="flex items-center justify-center h-screen" style={{ background: '#0a0a0a' }}>
         <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
-          style={{ borderColor: '#e354ff', borderTopColor: 'transparent' }} />
+          style={{ borderColor: ACCENT, borderTopColor: 'transparent' }} />
       </div>
     )
   }
@@ -155,24 +158,24 @@ export default function CatalogPage() {
             </svg>
             {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 text-xs font-black rounded-full w-4 h-4 flex items-center justify-center"
-                style={{ background: '#e354ff', color: '#fff', fontSize: 10 }}>{cartCount}</span>
+                style={{ background: ACCENT, color: '#fff', fontSize: 10 }}>{cartCount}</span>
             )}
           </button>
         </div>
 
-        {/* Фильтры по категориям */}
         <div className="flex gap-2 px-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          {CATEGORIES.map(cat => (
-            <button key={cat.id} onClick={() => setCategory(cat.id)}
-              className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all"
-              style={{
-                category === cat.id
-                  ? { background: '#e354ff', color: '#fff', border: `1px solid #e354ff` }
-                  : { background: 'transparent', color: '#666', border: '1px solid #2a2a2a' }
-              }}>
-              {cat.label}
-            </button>
-          ))}
+          {CATEGORIES.map(cat => {
+            const isActive = category === cat.id
+            return (
+              <button key={cat.id} onClick={() => setCategory(cat.id)}
+                className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all"
+                style={isActive
+                  ? { background: ACCENT, color: '#fff', border: `1px solid ${ACCENT}` }
+                  : { background: 'transparent', color: '#666', border: '1px solid #2a2a2a' }}>
+                {cat.label}
+              </button>
+            )
+          })}
         </div>
       </header>
 
@@ -207,7 +210,7 @@ export default function CatalogPage() {
               </div>
               <div className="px-3 py-3 flex flex-col gap-1" style={{ minHeight: 72 }}>
                 <p className="text-xs font-bold uppercase tracking-wide text-white leading-tight line-clamp-2">{product.name}</p>
-                <p className="text-xs font-black mt-auto" style={{ color: '#e354ff' }}>
+                <p className="text-xs font-black mt-auto" style={{ color: ACCENT }}>
                   {Number(product.price).toLocaleString('ru-RU')} ₽
                 </p>
               </div>
