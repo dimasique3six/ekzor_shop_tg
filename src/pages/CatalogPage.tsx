@@ -5,6 +5,7 @@ import { useCartStore } from '../store/cart'
 import type { Product, ProductVariant } from '../types'
 
 const ACCENT = '#e354ff'
+const SELLER_USERNAME = import.meta.env.VITE_SELLER_USERNAME || ''
 
 const CATEGORIES = [
   { id: '', label: 'Все' },
@@ -16,6 +17,14 @@ const CATEGORIES = [
   { id: 'другое', label: 'Другое' },
 ]
 
+function openSellerChat() {
+  if (!SELLER_USERNAME) return
+  const url = `https://t.me/${SELLER_USERNAME}`
+  const tg = (window as any).Telegram?.WebApp
+  if (tg?.openTelegramLink) tg.openTelegramLink(url)
+  else window.open(url, '_blank')
+}
+
 function ProductModal({ product, onClose }: { product: Product; onClose: () => void }) {
   const [imgIdx, setImgIdx] = useState(0)
   const [qty, setQty] = useState(1)
@@ -25,6 +34,7 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
     return init
   })
 
+  const stock = (product as any).stock as number | null
   const basePrice = Number(product.price)
   const extraPrice = product.variants
     ? product.variants.reduce((sum, v) => {
@@ -33,6 +43,7 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
       }, 0)
     : 0
   const totalPrice = (basePrice + extraPrice) * qty
+  const maxQty = stock != null ? Math.min(99, stock) : 99
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#0a0a0a' }}>
@@ -70,6 +81,12 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
             </span>
           </div>
 
+          {stock != null && stock <= 5 && stock > 0 && (
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>
+              Осталось {stock} шт.
+            </p>
+          )}
+
           {product.description && (
             <p className="text-sm leading-relaxed text-zinc-400">{product.description}</p>
           )}
@@ -101,7 +118,7 @@ function ProductModal({ product, onClose }: { product: Product; onClose: () => v
               <button onClick={() => setQty(q => Math.max(1, q - 1))}
                 className="w-8 h-8 flex items-center justify-center font-black text-lg border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white transition-colors">−</button>
               <span className="text-base font-black text-white w-5 text-center">{qty}</span>
-              <button onClick={() => setQty(q => Math.min(99, q + 1))}
+              <button onClick={() => setQty(q => Math.min(maxQty, q + 1))}
                 className="w-8 h-8 flex items-center justify-center font-black text-lg border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white transition-colors">+</button>
             </div>
           </div>
@@ -149,18 +166,27 @@ export default function CatalogPage() {
       <header className="sticky top-0 z-10 border-b border-zinc-800" style={{ background: '#0a0a0a' }}>
         <div className="flex items-center justify-between px-4 py-4">
           <h1 className="text-sm font-black uppercase tracking-[0.3em] text-white">Catalogue</h1>
-          <button onClick={() => navigate('/cart')} className="relative p-1">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
-              className="text-zinc-400 hover:text-white transition-colors">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-              <line x1="3" y1="6" x2="21" y2="6"/>
-              <path d="M16 10a4 4 0 01-8 0"/>
-            </svg>
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 text-xs font-black rounded-full w-4 h-4 flex items-center justify-center"
-                style={{ background: ACCENT, color: '#fff', fontSize: 10 }}>{cartCount}</span>
-            )}
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Кнопка связи с продавцом */}
+            <button onClick={openSellerChat} className="p-1 text-zinc-400 hover:text-white transition-colors" title="Связь">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+              </svg>
+            </button>
+            {/* Корзина */}
+            <button onClick={() => navigate('/cart')} className="relative p-1">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+                className="text-zinc-400 hover:text-white transition-colors">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 01-8 0"/>
+              </svg>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 text-xs font-black rounded-full w-4 h-4 flex items-center justify-center"
+                  style={{ background: ACCENT, color: '#fff', fontSize: 10 }}>{cartCount}</span>
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="flex gap-2 px-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
@@ -188,34 +214,45 @@ export default function CatalogPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-px" style={{ background: '#1a1a1a' }}>
-          {filtered.map(product => (
-            <button key={product.id}
-              onClick={() => product.status === 'available' && setSelected(product)}
-              className="relative flex flex-col text-left transition-opacity"
-              style={{ background: '#0a0a0a', opacity: product.status === 'unavailable' ? 0.5 : 1 }}>
-              <div className="relative w-full bg-zinc-900" style={{ paddingTop: '100%' }}>
-                {product.images[0]
-                  ? <img src={product.images[0]} alt={product.name}
-                      className="absolute inset-0 w-full h-full object-cover" />
-                  : <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-3xl opacity-10">◻</span>
+          {filtered.map(product => {
+            const stock = (product as any).stock as number | null
+            const outOfStock = product.status === 'unavailable' || (stock != null && stock <= 0)
+            return (
+              <button key={product.id}
+                onClick={() => !outOfStock && setSelected(product)}
+                className="relative flex flex-col text-left transition-opacity"
+                style={{ background: '#0a0a0a', opacity: outOfStock ? 0.5 : 1 }}>
+                <div className="relative w-full bg-zinc-900" style={{ paddingTop: '100%' }}>
+                  {product.images[0]
+                    ? <img src={product.images[0]} alt={product.name}
+                        className="absolute inset-0 w-full h-full object-cover" />
+                    : <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-3xl opacity-10">◻</span>
+                      </div>
+                  }
+                  {outOfStock && (
+                    <div className="absolute inset-0 flex items-end p-2" style={{ background: 'rgba(0,0,0,0.6)' }}>
+                      <span className="text-xs font-black uppercase tracking-widest px-2 py-1"
+                        style={{ background: '#333', color: '#888' }}>Нет в наличии</span>
                     </div>
-                }
-                {product.status === 'unavailable' && (
-                  <div className="absolute inset-0 flex items-end p-2" style={{ background: 'rgba(0,0,0,0.6)' }}>
-                    <span className="text-xs font-black uppercase tracking-widest px-2 py-1"
-                      style={{ background: '#333', color: '#888' }}>Нет в наличии</span>
-                  </div>
-                )}
-              </div>
-              <div className="px-3 py-3 flex flex-col gap-1" style={{ minHeight: 72 }}>
-                <p className="text-xs font-bold uppercase tracking-wide text-white leading-tight line-clamp-2">{product.name}</p>
-                <p className="text-xs font-black mt-auto" style={{ color: ACCENT }}>
-                  {Number(product.price).toLocaleString('ru-RU')} ₽
-                </p>
-              </div>
-            </button>
-          ))}
+                  )}
+                  {!outOfStock && stock != null && stock <= 5 && (
+                    <div className="absolute top-2 right-2">
+                      <span className="text-xs font-black px-2 py-1" style={{ background: ACCENT, color: '#fff', fontSize: 10 }}>
+                        {stock} шт.
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="px-3 py-3 flex flex-col gap-1" style={{ minHeight: 72 }}>
+                  <p className="text-xs font-bold uppercase tracking-wide text-white leading-tight line-clamp-2">{product.name}</p>
+                  <p className="text-xs font-black mt-auto" style={{ color: ACCENT }}>
+                    {Number(product.price).toLocaleString('ru-RU')} ₽
+                  </p>
+                </div>
+              </button>
+            )
+          })}
         </div>
       )}
 
