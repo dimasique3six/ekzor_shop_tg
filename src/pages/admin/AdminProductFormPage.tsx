@@ -10,55 +10,59 @@ export default function AdminProductFormPage() {
   const navigate = useNavigate()
   const isEdit = Boolean(id)
 
-  const [name,   setName]   = useState('')
-  const [price,  setPrice]  = useState('')
-  const [desc,   setDesc]   = useState('')
-  const [images, setImages] = useState<string[]>([''])
-  const [status, setStatus] = useState<'available' | 'unavailable'>('available')
+  const [name,     setName]     = useState('')
+  const [price,    setPrice]    = useState('')
+  const [stock,    setStock]    = useState('')
+  const [desc,     setDesc]     = useState('')
+  const [images,   setImages]   = useState<string[]>([''])
+  const [status,   setStatus]   = useState<'available' | 'unavailable'>('available')
   const [variants, setVariants] = useState<Variant[]>([])
-  const [saving, setSaving] = useState(false)
-  const [error,  setError]  = useState('')
+  const [saving,   setSaving]   = useState(false)
+  const [error,    setError]    = useState('')
 
   useEffect(() => {
     if (!isEdit) return
     adminApi.products.list().then(ps => {
       const p = ps.find(x => x.id === Number(id))
       if (!p) return
-      setName(p.name); setPrice(String(Number(p.price)))
-      setDesc(p.description || ''); setStatus(p.status)
+      setName(p.name)
+      setPrice(String(Number(p.price)))
+      setStock((p as any).stock != null ? String((p as any).stock) : '')
+      setDesc(p.description || '')
+      setStatus(p.status)
       setImages(p.images.length > 0 ? p.images : [''])
       setVariants((p.variants as Variant[]) || [])
     }).catch(() => navigate('/admin/products'))
   }, [id])
 
-  // Варианты
-  function addVariant()  { setVariants(v => [...v, { name: '', values: [{ label: '', priceDiff: 0 }] }]) }
+  function addVariant() { setVariants(v => [...v, { name: '', values: [{ label: '', priceDiff: 0 }] }]) }
   function removeVariant(i: number) { setVariants(v => v.filter((_, j) => j !== i)) }
-  function setVarName(i: number, name: string) { setVariants(v => { const c=[...v]; c[i]={...c[i],name}; return c }) }
+  function setVarName(i: number, name: string) { setVariants(v => { const c = [...v]; c[i] = { ...c[i], name }; return c }) }
   function addVarValue(vi: number) {
-    setVariants(v => { const c=[...v]; c[vi]={...c[vi], values:[...c[vi].values,{label:'',priceDiff:0}]}; return c })
+    setVariants(v => { const c = [...v]; c[vi] = { ...c[vi], values: [...c[vi].values, { label: '', priceDiff: 0 }] }; return c })
   }
   function removeVarValue(vi: number, ji: number) {
-    setVariants(v => { const c=[...v]; c[vi]={...c[vi], values:c[vi].values.filter((_,j)=>j!==ji)}; return c })
+    setVariants(v => { const c = [...v]; c[vi] = { ...c[vi], values: c[vi].values.filter((_, j) => j !== ji) }; return c })
   }
-  function setVarValue(vi: number, ji: number, field: 'label'|'priceDiff', val: string) {
+  function setVarValue(vi: number, ji: number, field: 'label' | 'priceDiff', val: string) {
     setVariants(v => {
-      const c=[...v]; const vals=[...c[vi].values]
-      vals[ji]={...vals[ji], [field]: field==='priceDiff' ? Number(val) : val}
-      c[vi]={...c[vi], values:vals}; return c
+      const c = [...v]; const vals = [...c[vi].values]
+      vals[ji] = { ...vals[ji], [field]: field === 'priceDiff' ? Number(val) : val }
+      c[vi] = { ...c[vi], values: vals }; return c
     })
   }
 
-  // Изображения
-  function setImg(i: number, val: string) { setImages(imgs => { const c=[...imgs]; c[i]=val; return c }) }
-  function addImg()    { if (images.length < 5) setImages(i => [...i, '']) }
-  function removeImg(i: number) { setImages(imgs => imgs.filter((_,j)=>j!==i)) }
+  function setImg(i: number, val: string) { setImages(imgs => { const c = [...imgs]; c[i] = val; return c }) }
+  function addImg() { if (images.length < 5) setImages(i => [...i, '']) }
+  function removeImg(i: number) { setImages(imgs => imgs.filter((_, j) => j !== i)) }
 
   async function save() {
     if (!name.trim() || !price.trim()) { setError('Название и цена обязательны'); return }
     setSaving(true); setError('')
     const payload = {
-      name: name.trim(), price: Number(price), description: desc.trim() || null,
+      name: name.trim(), price: Number(price),
+      stock: stock !== '' ? Number(stock) : null,
+      description: desc.trim() || null,
       images: images.filter(Boolean), status,
       variants: variants.length > 0 ? variants : null
     }
@@ -66,11 +70,8 @@ export default function AdminProductFormPage() {
       if (isEdit) await adminApi.products.update(Number(id), payload)
       else await adminApi.products.create(payload)
       navigate('/admin/products')
-    } catch (e: any) {
-      setError(e.message || 'Ошибка сохранения')
-    } finally {
-      setSaving(false)
-    }
+    } catch (e: any) { setError(e.message || 'Ошибка сохранения') }
+    finally { setSaving(false) }
   }
 
   const inp = "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400"
@@ -94,6 +95,13 @@ export default function AdminProductFormPage() {
               <label className="block text-sm font-medium text-gray-600 mb-1">Цена (₽) *</label>
               <input type="number" min="0" value={price} onChange={e => setPrice(e.target.value)} className={inp} placeholder="1500" />
             </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                Количество
+                <span className="ml-1 text-xs text-gray-400">(пусто = безлимит)</span>
+              </label>
+              <input type="number" min="0" value={stock} onChange={e => setStock(e.target.value)} className={inp} placeholder="50" />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Статус</label>
               <select value={status} onChange={e => setStatus(e.target.value as any)} className={inp}>
@@ -109,13 +117,18 @@ export default function AdminProductFormPage() {
           </div>
         </div>
 
-        {/* Изображения */}
         <div className="bg-white rounded-xl p-6 space-y-3 shadow-sm">
-          <h2 className="font-semibold text-gray-700">Изображения (URL, до 5 штук)</h2>
+          <h2 className="font-semibold text-gray-700">
+            Изображения (URL, до 5 штук)
+            <a href="https://telegra.ph" target="_blank" rel="noreferrer"
+              className="ml-2 text-xs text-blue-400 font-normal">
+              ↗ загрузить на telegra.ph
+            </a>
+          </h2>
           {images.map((url, i) => (
             <div key={i} className="flex gap-2">
               <input value={url} onChange={e => setImg(i, e.target.value)} className={`${inp} flex-1`}
-                placeholder="https://example.com/image.jpg" />
+                placeholder="https://telegra.ph/file/..." />
               {images.length > 1 && (
                 <button onClick={() => removeImg(i)} className="text-red-400 hover:text-red-600 px-2">✕</button>
               )}
@@ -126,14 +139,13 @@ export default function AdminProductFormPage() {
           )}
         </div>
 
-        {/* Варианты */}
         <div className="bg-white rounded-xl p-6 space-y-4 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-gray-700">Варианты</h2>
             <button onClick={addVariant} className="text-sm text-blue-500 hover:text-blue-700">+ Добавить вариант</button>
           </div>
           {variants.length === 0 && (
-            <p className="text-sm text-gray-400">Нет вариантов. Например: Размер, Цвет.</p>
+            <p className="text-sm text-gray-400">Например: Размер, Цвет.</p>
           )}
           {variants.map((v, vi) => (
             <div key={vi} className="border border-gray-200 rounded-lg p-4 space-y-3">
