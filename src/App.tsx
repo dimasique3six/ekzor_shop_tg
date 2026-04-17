@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route } from "react-router-dom"
+import { MemoryRouter, Routes, Route } from 'react-router-dom' 
 import { useEffect } from 'react'
 import CatalogPage      from './pages/CatalogPage'
 import CartPage         from './pages/CartPage'
