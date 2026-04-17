@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { api } from '../api'
 import type { Order } from '../types'
 
+const ACCENT = '#e354ff'
 const SELLER_USERNAME = import.meta.env.VITE_SELLER_USERNAME || ''
 
 export default function SuccessPage() {
@@ -14,10 +15,7 @@ export default function SuccessPage() {
   }, [id])
 
   function goToSeller() {
-    const msg = encodeURIComponent(
-      `Здравствуйте! Я оформил(а) заказ №${id} на сумму ${Number(order?.totalAmount || 0).toLocaleString('ru-RU')} ₽. Готов(а) подтвердить и оплатить.`
-    )
-    const url = `https://t.me/${SELLER_USERNAME}?text=${msg}`
+    const url = `https://t.me/${SELLER_USERNAME}`
     const tg = (window as any).Telegram?.WebApp
     if (tg?.openTelegramLink) tg.openTelegramLink(url)
     else window.open(url, '_blank')
@@ -26,14 +24,14 @@ export default function SuccessPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center gap-6"
       style={{ background: '#0a0a0a' }}>
-      <div className="w-16 h-16 flex items-center justify-center border-2" style={{ borderColor: '#e354ff' }}>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e354ff" strokeWidth="2.5">
+      <div className="w-16 h-16 flex items-center justify-center border-2" style={{ borderColor: ACCENT }}>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
       </div>
 
       <div>
-        <h1 className="text-xl font-black uppercase tracking-widest text-white mb-1">Заказ принят</h1>
+        <h1 className="text-xl font-black uppercase tracking-widest text-white mb-1">Заказ оформлен</h1>
         {id && <p className="text-xs text-zinc-600 uppercase tracking-wider font-mono">#{id}</p>}
       </div>
 
@@ -59,14 +57,14 @@ export default function SuccessPage() {
         </div>
       )}
 
-      <p className="text-xs text-zinc-600 uppercase tracking-wider leading-relaxed">
-        Свяжитесь с продавцом для подтверждения и оплаты
+      <p className="text-sm text-zinc-400 leading-relaxed">
+        В ближайшее время продавец свяжется с вами для подтверждения и оплаты
       </p>
 
       {SELLER_USERNAME && (
         <button onClick={goToSeller}
           className="w-full py-4 text-sm font-black uppercase tracking-widest transition-all hover:opacity-90"
-          style={{ background: '#e354ff', color: '#fff' }}>
+          style={{ background: ACCENT, color: '#fff' }}>
           Написать продавцу
         </button>
       )}
