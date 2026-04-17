@@ -3,7 +3,7 @@ import { useCartStore, calcItemPrice } from '../store/cart'
 
 export default function CartPage() {
   const navigate = useNavigate()
-  const { items, updateQuantity, removeItem, getTotal } = useCartStore()
+  const { items, updateQuantity, removeItem, getTotal, clear } = useCartStore()
   const total = getTotal()
 
   return (
@@ -17,9 +17,12 @@ export default function CartPage() {
         </button>
         <h1 className="text-sm font-black uppercase tracking-[0.3em] text-white flex-1">Корзина</h1>
         {items.length > 0 && (
-          <span className="text-xs text-zinc-600 uppercase tracking-wider">
-            {items.reduce((n, i) => n + i.quantity, 0)} шт.
-          </span>
+          <button onClick={() => clear()} className="text-zinc-600 hover:text-zinc-400 transition-colors">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+              <path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+            </svg>
+          </button>
         )}
       </header>
 
@@ -29,13 +32,13 @@ export default function CartPage() {
           <p className="text-xs uppercase tracking-widest text-zinc-600">Корзина пуста</p>
           <button onClick={() => navigate('/')}
             className="px-8 py-3 text-xs font-black uppercase tracking-widest"
-            style={{ background: '#d4a843', color: '#0a0a0a' }}>
+            style={{ background: '#e354ff', color: '#fff' }}>
             В каталог
           </button>
         </div>
       ) : (
         <>
-          <div className="flex-1 overflow-y-auto pb-36">
+          <div className="flex-1 overflow-y-auto pb-40">
             {items.map((item, idx) => {
               const itemPrice = calcItemPrice(item)
               const varText = Object.entries(item.selectedVariants).map(([k, v]) => `${k}: ${v}`).join(' · ')
@@ -44,7 +47,7 @@ export default function CartPage() {
                   <div className="w-20 h-20 flex-shrink-0 bg-zinc-900 overflow-hidden">
                     {item.product.images[0]
                       ? <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
-                      : <div className="w-full h-full flex items-center justify-center opacity-20">◻</div>
+                      : <div className="w-full h-full flex items-center justify-center opacity-20 text-2xl">◻</div>
                     }
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
@@ -52,7 +55,7 @@ export default function CartPage() {
                       <p className="text-xs font-black uppercase tracking-wide text-white leading-tight">{item.product.name}</p>
                       {varText && <p className="text-xs mt-0.5 text-zinc-600 uppercase tracking-wider">{varText}</p>}
                     </div>
-                    <p className="text-sm font-black" style={{ color: '#d4a843' }}>
+                    <p className="text-sm font-black" style={{ color: '#e354ff' }}>
                       {(itemPrice * item.quantity).toLocaleString('ru-RU')} ₽
                     </p>
                   </div>
@@ -83,7 +86,7 @@ export default function CartPage() {
             </div>
             <button onClick={() => navigate('/checkout')}
               className="w-full py-4 text-sm font-black uppercase tracking-widest transition-all hover:opacity-90"
-              style={{ background: '#d4a843', color: '#0a0a0a' }}>
+              style={{ background: '#e354ff', color: '#fff' }}>
               Оформить заказ
             </button>
           </div>
