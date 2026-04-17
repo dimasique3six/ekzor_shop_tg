@@ -33,11 +33,10 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Шапка */}
+    <div className="min-h-screen bg-gray-50" style={{ color: '#111827' }}>
       <header className="bg-white border-b px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <h1 className="text-xl font-bold">Заказы</h1>
+          <h1 className="text-xl font-bold text-gray-900">Заказы</h1>
           <nav className="flex gap-4 text-sm">
             <span className="font-semibold text-blue-500 border-b-2 border-blue-500 pb-1">Заказы</span>
             <button onClick={() => navigate('/admin/products')} className="text-gray-500 hover:text-gray-800">Товары</button>
@@ -48,13 +47,12 @@ export default function AdminOrdersPage() {
       </header>
 
       <div className="px-6 py-5">
-        {/* Фильтры */}
         <div className="flex flex-wrap gap-3 mb-5">
           <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
             placeholder="Поиск по номеру или имени..."
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none w-64" />
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none w-64 bg-white text-gray-900" />
           <select value={status} onChange={e => { setStatus(e.target.value); setPage(1) }}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none">
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none bg-white text-gray-900">
             <option value="">Все статусы</option>
             {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
@@ -82,10 +80,10 @@ export default function AdminOrdersPage() {
                       <tr key={order.id} className="border-b hover:bg-gray-50 cursor-pointer"
                         onClick={() => setExpanded(expanded === order.id ? null : order.id)}>
                         <td className="px-4 py-3 font-mono font-medium text-blue-600">{order.id}</td>
-                        <td className="px-4 py-3">{order.customerName}</td>
+                        <td className="px-4 py-3 text-gray-900">{order.customerName}</td>
                         <td className="px-4 py-3 text-gray-500">{order.customerPhone}</td>
-                        <td className="px-4 py-3 font-semibold">{Number(order.totalAmount).toLocaleString('ru-RU')} ₽</td>
-                        <td className="px-4 py-3 text-gray-500">{new Date(order.createdAt).toLocaleDateString('ru-RU')}</td>
+                        <td className="px-4 py-3 font-semibold text-gray-900">{Number(order.totalAmount).toLocaleString('ru-RU')} ₽</td>
+                        <td className="px-4 py-3 text-gray-500">{new Date(order.createdAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[order.status] || ''}`}>
                             {STATUS_LABELS[order.status] || order.status}
@@ -94,7 +92,7 @@ export default function AdminOrdersPage() {
                         <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                           <select value={order.status}
                             onChange={e => changeStatus(order.id, e.target.value)}
-                            className="border border-gray-200 rounded px-2 py-1 text-xs outline-none">
+                            className="border border-gray-200 rounded px-2 py-1 text-xs outline-none bg-white text-gray-900">
                             {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                           </select>
                         </td>
@@ -106,7 +104,7 @@ export default function AdminOrdersPage() {
                               <div>
                                 <p className="text-xs font-semibold text-gray-500 mb-2 uppercase">Состав заказа</p>
                                 {order.items.map((item: any) => (
-                                  <div key={item.id} className="flex justify-between text-sm py-1">
+                                  <div key={item.id} className="flex justify-between text-sm py-1 text-gray-900">
                                     <span>{item.product.name}
                                       {item.variants && Object.values(item.variants).length > 0
                                         ? ` (${Object.values(item.variants).join(', ')})` : ''} × {item.quantity}
@@ -115,11 +113,14 @@ export default function AdminOrdersPage() {
                                   </div>
                                 ))}
                               </div>
-                              <div className="text-sm space-y-1">
+                              <div className="text-sm space-y-1 text-gray-900">
                                 <p className="text-xs font-semibold text-gray-500 mb-2 uppercase">Покупатель</p>
                                 <p><b>Адрес:</b> {order.address}</p>
                                 {order.telegramUsername && <p><b>Telegram:</b> @{order.telegramUsername}</p>}
                                 {order.comment && <p><b>Комментарий:</b> {order.comment}</p>}
+                                <p className="text-xs text-gray-400 mt-2">
+                                  Резерв до: {new Date(order.reservedUntil).toLocaleString('ru-RU')}
+                                </p>
                               </div>
                             </div>
                           </td>
@@ -131,16 +132,15 @@ export default function AdminOrdersPage() {
               </table>
             </div>
 
-            {/* Пагинация */}
             {data.total > data.pageSize && (
               <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
                 <span>Всего: {data.total}</span>
                 <div className="flex gap-2">
                   <button disabled={page === 1} onClick={() => setPage(p => p - 1)}
-                    className="px-3 py-1.5 rounded border disabled:opacity-40">← Назад</button>
+                    className="px-3 py-1.5 rounded border disabled:opacity-40 bg-white text-gray-700">← Назад</button>
                   <span className="px-3 py-1.5">{page} / {Math.ceil(data.total / data.pageSize)}</span>
                   <button disabled={page >= Math.ceil(data.total / data.pageSize)} onClick={() => setPage(p => p + 1)}
-                    className="px-3 py-1.5 rounded border disabled:opacity-40">Вперёд →</button>
+                    className="px-3 py-1.5 rounded border disabled:opacity-40 bg-white text-gray-700">Вперёд →</button>
                 </div>
               </div>
             )}
