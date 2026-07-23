@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { adminApi } from '../../api'
 import type { Product } from '../../types'
+import AdminNav, { ACCENT } from './AdminNav'
 
 export default function AdminProductsPage() {
   const navigate = useNavigate()
@@ -26,84 +27,74 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" style={{ color: '#111827' }}>
-      <header className="bg-white border-b px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <h1 className="text-xl font-bold text-gray-900">Товары</h1>
-          <nav className="flex gap-4 text-sm">
-            <button onClick={() => navigate('/admin/orders')} className="text-gray-500 hover:text-gray-800">Заказы</button>
-            <span className="font-semibold text-blue-500 border-b-2 border-blue-500 pb-1">Товары</span>
-          </nav>
-        </div>
-        <div className="flex gap-3">
-          <button onClick={() => navigate('/admin/products/new')}
-            className="bg-blue-500 text-white text-sm px-4 py-2 rounded-lg font-medium">+ Добавить товар</button>
-          <button onClick={() => { localStorage.removeItem('admin_token'); navigate('/admin') }}
-            className="text-sm text-gray-400 hover:text-gray-600">Выйти</button>
-        </div>
-      </header>
+    <div className="min-h-screen" style={{ background: '#0a0a0a' }}>
+      <AdminNav active="products">
+        <button onClick={() => navigate('/admin/products/new')}
+          className="text-xs font-black uppercase tracking-widest px-4 py-2 transition-opacity hover:opacity-90"
+          style={{ background: ACCENT, color: '#fff' }}>+ Добавить</button>
+      </AdminNav>
 
-      <div className="px-6 py-5">
+      <div className="px-6 py-6">
         {loading ? (
-          <div className="text-center py-20 text-gray-400">Загрузка...</div>
+          <div className="text-center py-24 text-zinc-600 text-xs uppercase tracking-widest">Загрузка...</div>
         ) : (
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="border border-zinc-800 overflow-hidden overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-gray-50">
+                <tr className="border-b border-zinc-800">
                   {['Фото', 'Название', 'Категория', 'Цена', 'Остаток', 'Статус', 'Действия'].map(h => (
-                    <th key={h} className="text-left px-4 py-3 font-medium text-gray-600">{h}</th>
+                    <th key={h} className="text-left px-4 py-3 font-bold uppercase tracking-widest text-xs text-zinc-500">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {products.length === 0 && (
-                  <tr><td colSpan={7} className="text-center py-12 text-gray-400">Товаров нет</td></tr>
+                  <tr><td colSpan={7} className="text-center py-16 text-zinc-600 text-xs uppercase tracking-widest">Товаров нет</td></tr>
                 )}
                 {products.map((p: any) => {
                   const lowStock = p.stock != null && p.stock <= 5 && p.stock > 0
                   const noStock = p.stock === 0
                   return (
-                    <tr key={p.id} className="border-b hover:bg-gray-50">
+                    <tr key={p.id} className="border-b border-zinc-900 hover:bg-zinc-900/50 transition-colors">
                       <td className="px-4 py-3">
                         {p.images[0]
-                          ? <img src={p.images[0]} alt={p.name} className="w-12 h-12 rounded-lg object-cover" />
-                          : <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center text-xl">🖼</div>
+                          ? <img src={p.images[0]} alt={p.name} className="w-12 h-12 object-cover border border-zinc-800" />
+                          : <div className="w-12 h-12 border border-zinc-800 flex items-center justify-center text-xl text-zinc-700">◻</div>
                         }
                       </td>
-                      <td className="px-4 py-3 font-medium max-w-xs text-gray-900">
+                      <td className="px-4 py-3 font-medium max-w-xs text-white">
                         <p>{p.name}</p>
-                        {p.description && <p className="text-xs text-gray-400 truncate mt-0.5">{p.description}</p>}
+                        {p.description && <p className="text-xs text-zinc-500 truncate mt-0.5 font-normal">{p.description}</p>}
                       </td>
-                      <td className="px-4 py-3 text-gray-500">
+                      <td className="px-4 py-3 text-zinc-400">
                         {p.category ? p.category.charAt(0).toUpperCase() + p.category.slice(1) : '—'}
                       </td>
-                      <td className="px-4 py-3 font-semibold text-gray-900">{Number(p.price).toLocaleString('ru-RU')} ₽</td>
+                      <td className="px-4 py-3 font-black text-white">{Number(p.price).toLocaleString('ru-RU')} ₽</td>
                       <td className="px-4 py-3">
                         {p.stock == null ? (
-                          <span className="text-gray-400">∞</span>
+                          <span className="text-zinc-600">∞</span>
                         ) : noStock ? (
-                          <span className="text-red-500 font-semibold">0</span>
+                          <span style={{ color: ACCENT }} className="font-bold">0</span>
                         ) : lowStock ? (
-                          <span className="text-orange-500 font-semibold">{p.stock}</span>
+                          <span className="text-amber-400 font-bold">{p.stock}</span>
                         ) : (
-                          <span className="text-gray-700">{p.stock}</span>
+                          <span className="text-zinc-300">{p.stock}</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         <button onClick={() => toggleStatus(p)}
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            p.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
-                          }`}>
+                          className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-zinc-300">
+                          <span className="w-1.5 h-1.5 rounded-full"
+                            style={{ background: p.status === 'available' ? '#34d399' : '#71717a' }} />
                           {p.status === 'available' ? 'В наличии' : 'Скрыт'}
                         </button>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                           <button onClick={() => navigate(`/admin/products/${p.id}/edit`)}
-                            className="text-blue-500 hover:text-blue-700 text-xs font-medium">Изменить</button>
+                            className="text-xs font-bold uppercase tracking-wide text-zinc-300 hover:text-white transition-colors">Изменить</button>
                           <button onClick={() => del(p)}
-                            className="text-red-400 hover:text-red-600 text-xs font-medium">Удалить</button>
+                            className="text-xs font-bold uppercase tracking-wide text-zinc-600 hover:text-fuchsia-400 transition-colors">Удалить</button>
                         </div>
                       </td>
                     </tr>
